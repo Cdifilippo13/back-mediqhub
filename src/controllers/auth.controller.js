@@ -7,7 +7,7 @@ export default class AuthController {
         _authService = AuthService;
     }
 
-    async login({ body}, res) {
+    async login({ body }, res) {
 
         const data = await _authService.login(body);
 

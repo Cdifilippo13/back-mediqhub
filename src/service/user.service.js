@@ -18,10 +18,8 @@ export default class userService {
             name: userToInsert.name,
             email: userToInsert.email,
             password: await encryptPassword(userToInsert.password),
-            typeId: userToInsert.type
+            typeId: userToInsert.typeId
         }
-
-        console.log(userToInsert)
 
         const userCreated = await _userRepository.createUser(userWithPasswordEncrypted);
 
@@ -39,11 +37,6 @@ export default class userService {
         }
 
 
-        return userCreated
-
-
+        return { userCreated }
     }
-
-
-
 }
