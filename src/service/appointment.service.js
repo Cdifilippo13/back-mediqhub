@@ -5,57 +5,108 @@ import BaseService from "./base.service.js";
 let _appointmentRepository = null;
 let _doctorRepository = null;
 let _patientRepository = null;
-
+let _userRepository = null;
 
 export default class AppointmentService extends BaseService {
-    constructor({ AppointmentRepository, DoctorRepository, PatientRepository }) {
-        super(AppointmentRepository);
-        _appointmentRepository = AppointmentRepository;
-        _doctorRepository = DoctorRepository;
-        _patientRepository = PatientRepository;
+  constructor({
+    AppointmentRepository,
+    DoctorRepository,
+    PatientRepository,
+    UserRepository,
+  }) {
+    super(AppointmentRepository);
+    _appointmentRepository = AppointmentRepository;
+    _doctorRepository = DoctorRepository;
+    _patientRepository = PatientRepository;
+
+    _userRepository = UserRepository;
+  }
+
+  async createAppointment(appointmentToInsert) {
+    const appointment = {
+      citation: appointmentToInsert.citation,
+      state: STATE.PENDIENTE,
+      doctorId: appointmentToInsert.doctorId,
+      patientId: appointmentToInsert.patientId,
+    };
+
+    return _appointmentRepository.createAppointment(appointment);
+  }
+
+  async getAppointmentsByUserAndType(user) {
+    let response = {};
+    if (Number(user.typeId) === TYPE.DOCTOR) {
+      const doctorFound = await _doctorRepository.getDoctorByUserId(
+        user.userId
+      );
+      const doctor = await _userRepository.getUserByUserId(
+        doctorFound[0].userId
+      );
+      const appointments =
+        await _appointmentRepository.getAppointmentsByUserAndType(
+          "doctorId",
+          doctorFound[0]
+        );
+
+      const appointmentPromises = appointments.map(async (appointment) => {
+        const { patientId, doctorId, ...rest } = appointment;
+
+        const patientUserId = await _patientRepository.getPatientById(
+          patientId
+        );
+        const userPatient = await _userRepository.getUserByUserId(
+          patientUserId[0].userId
+        );
+
+        return { ...rest, patient: userPatient };
+      });
+
+      const resolvedAppointments = await Promise.all(appointmentPromises);
+
+      response = {
+        doctor,
+        appointments: resolvedAppointments,
+      };
+
+      return response;
     }
 
-    async createAppointment(appointmentToInsert) {
+    if (Number(user.typeId) === TYPE.PATIENT) {
+      const patientFound = await _patientRepository.getPatientByUserId(
+        user.userId
+      );
+      const patient = await _userRepository.getUserByUserId(
+        patientFound[0].userId
+      );
+      const appointments =
+        await _appointmentRepository.getAppointmentsByUserAndType(
+          "patientId",
+          patientFound[0]
+        );
 
-        const appointment = {
-            citation: appointmentToInsert.citation,
-            state: STATE.PENDIENTE,
-            doctorId: appointmentToInsert.doctorId,
-            patientId: appointmentToInsert.patientId
-        }
+      const appointmentPromises = appointments.map(async (appointment) => {
+        const { patientId, doctorId, ...rest } = appointment;
 
-        return _appointmentRepository.createAppointment(appointment);
+        const doctorUserId = await _doctorRepository.getDoctorById(doctorId);
+        const userDoctor = await _userRepository.getUserByUserId(
+          doctorUserId[0].userId
+        );
 
+        return { ...rest, doctor: userDoctor };
+      });
+
+      const resolvedAppointments = await Promise.all(appointmentPromises);
+
+      response = {
+        patient,
+        appointments: resolvedAppointments,
+      };
+
+      return response;
     }
+  }
 
-
-    async getAppointmentsByUserAndType(user) {
-        let response = {};
-
-        if (user.typeId === TYPE.DOCTOR) {
-
-            const doctorFound = await _doctorRepository.getDoctorByUserId(user.userId);
-
-            if (doctorFound.length < 1) {
-                return response = []
-            }
-
-            return _appointmentRepository.getAppointmentsByUserAndType('doctorId', doctorFound[0]);
-        }
-
-        const patientFound = await _patientRepository.getPatientByUserId(user.userId);
-
-        if (patientFound.length < 1) {
-            return response = []
-        }
-        return _appointmentRepository.getAppointmentsByUserAndType('patientId', patientFound[0]);
-
-    }
-
-    async updateAppointment(appointment) {
-        return _appointmentRepository.updateAppointment(appointment);
-    }
-
-    
-
+  async updateAppointment(appointment) {
+    return _appointmentRepository.updateAppointment(appointment);
+  }
 }

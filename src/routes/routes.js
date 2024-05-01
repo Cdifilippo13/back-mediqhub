@@ -1,6 +1,7 @@
 import {Router} from "express";
 
 import doctorRoutes from './doctor.routes.js';
+import patienRoutes from './patient.routes.js'
 import publicRoutes from './public.routes.js';
 import typeRoutes from './type.routes.js';
 import userRoutes from './user.routes.js';
@@ -14,6 +15,7 @@ const apiRouter = Router();
 router.use("/v1/api", publicRoutes);
 
 apiRouter.use("/doctor", doctorRoutes);
+apiRouter.use("/patient", patienRoutes);
 apiRouter.use("/type", typeRoutes);
 apiRouter.use("/user", userRoutes)
 apiRouter.use("/clinicHistory", clinicHistoryRoutes)

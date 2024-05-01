@@ -12,4 +12,10 @@ export default class UserRepository extends BaseRepository {
       .query()
       .insertGraph(usersToInsert);
   }
+
+  async getUserByUserId(userId){
+    const userWithPassword = await _users.query().where('email',userId);
+    const { password, typeId,...rest } = userWithPassword[0]
+    return rest;
+  }
 }
