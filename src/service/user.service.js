@@ -13,20 +13,22 @@ export default class userService {
     }
 
     async createUser(userToInsert) {
-
+        console.log(userToInsert);
         const userWithPasswordEncrypted = {
             name: userToInsert.name,
             email: userToInsert.email,
             password: await encryptPassword(userToInsert.password),
-            typeId: userToInsert.typeId
+            typeId: userToInsert.type
         }
 
         const userCreated = await _userRepository.createUser(userWithPasswordEncrypted);
 
-        if (userCreated.typeId === TYPE.DOCTOR) {
+        console.log(userWithPasswordEncrypted);
+
+        if (userCreated.typeId === String(TYPE.DOCTOR)) {
             let doctorToInsert = {
                 userId: userCreated.email,
-                medicalSpeciality: userToInsert.medicalSpeciality
+                medicalSpeciality: userToInsert.specialty
               }
               _doctorRepository.createDoctor(doctorToInsert);
         } else {
