@@ -34,14 +34,20 @@ export default class AppointmentService extends BaseService {
   }
 
   async getAppointmentsByUserAndType(user) {
+
+  
     let response = {};
     if (Number(user.typeId) === TYPE.DOCTOR) {
       const doctorFound = await _doctorRepository.getDoctorByUserId(
         user.userId
       );
+
+      console.log(doctorFound);
       const doctor = await _userRepository.getUserByUserId(
         doctorFound[0].userId
       );
+
+
       const appointments =
         await _appointmentRepository.getAppointmentsByUserAndType(
           "doctorId",
@@ -50,6 +56,8 @@ export default class AppointmentService extends BaseService {
 
       const appointmentPromises = appointments.map(async (appointment) => {
         const { patientId, doctorId, ...rest } = appointment;
+
+        console.log(appointments);
 
         const patientUserId = await _patientRepository.getPatientById(
           patientId
